@@ -20,12 +20,18 @@ struct RequestInfo: Content {
     let headers: [String: String]
     var body: String?
     let origin: String?
+    let method: String
 
-    init(path: String, headers: [String: String], body: String? = nil, origin: String?) {
+    init(path: String,
+         headers: [String: String],
+         body: String? = nil,
+         origin: String?,
+         method: String) {
         self.path = path
         self.headers = headers
         self.body = body
         self.origin = origin
+        self.method = method
     }
 }
 
@@ -34,6 +40,7 @@ func printRequestInfo(info: RequestInfo) {
     encoder.outputFormatting = .prettyPrinted
     guard let requestInfoData = try? encoder.encode(info) else { return }
     guard let requestInfoString = String(data: requestInfoData, encoding: .utf8) else { return }
+    print("\n\(info.method) request to \(info.path) from \(info.origin ?? "unknown")")
     print(requestInfoString)
 }
 
@@ -42,8 +49,9 @@ func request(_ req: Request) throws -> RequestInfo {
     let headers = Dictionary(uniqueKeysWithValues:
         req.http.headers.compactMap { (String($0.name), String($0.value)) })
     let origin = req.http.remotePeer.hostname
-    var request = RequestInfo(path: path, headers: headers, origin: origin)
-    if req.http.method.string != "GET" {
+    let method = req.http.method.string
+    var request = RequestInfo(path: path, headers: headers, origin: origin, method: method)
+    if method != "GET" {
         request.body = req.http.body.description
     }
     printRequestInfo(info: request)
