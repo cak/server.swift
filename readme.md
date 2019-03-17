@@ -13,12 +13,14 @@ brew install mxcl/made/swift-sh
 
 #### Run server.swift
 ```console
-$ swift sh server.swift
+swift sh <(curl -L https://github.com/cak/server.swift/raw/master/server.swift)
 ```
 
 ```console
 Server starting on http://0.0.0.0:8000
 ```
+
+*Alternatively, you can clone the repository and run `‌swift sh server.swift`*
 
 ## Serving Static Files
 servers.swift will serve all files in the current working directory. 
@@ -102,7 +104,7 @@ Connection: keep-alive
 
 ## Contributing
 
-Send a pull request, create an issue or discuss with me on the Vapor discord.
+Send a pull request, create an issue or discuss with me (@cak) on the Vapor [Discord](http://vapor.team) server.
 
 ## Powered By
 
