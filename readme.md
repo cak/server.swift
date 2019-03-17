@@ -25,49 +25,85 @@ servers.swift will serve all files in the current working directory.
 
 ## Examples
 
-**GET request:**
+### GET request:
 
 ```console
-curl "http://localhost:8000/get?foo=bar"
+curl -I "http://localhost:8000/get?foo=bar"
 ```
 
-**server.swift response**
+**server.swift console**
 
-```JSON
+```console
+GET request to /get?foo=bar from 127.0.0.1
 {
   "path" : "\/get?foo=bar",
+  "method" : "GET",
   "headers" : {
-    "User-Agent" : "curl\/7.54.0",
     "Accept" : "*\/*",
-    "Host" : "localhost:8080"
+    "Host" : "localhost:8000",
+    "User-Agent" : "curl\/7.54.0"
   },
-  "origin" : "::1"
+  "origin" : "127.0.0.1"
 }
 ```
 
-**POST request:**
+**server.swift HTTP response**
+
+```HTTP
+HTTP/1.1 200 OK
+content-type: application/json; charset=utf-8
+content-length: 140
+date: Sun, 17 Mar 2019 14:50:40 GMT
+Connection: keep-alive
+
+{"path":"\/get?foo=bar","method":"GET","headers":{"Accept":"*\/*","Host":"localhost:8000","User-Agent":"curl\/7.54.0"},"origin":"127.0.0.1"}
+```
+
+### POST request:
 
 ```console
-curl -X "POST" "http://localhost:8000/post" \
+curl -I -X "POST" "http://localhost:8000/post" \
      -H 'Content-Type: application/json; charset=utf-8' \
      -d $'{
   "foo": "bar"
 }'
 ```
 
-**server.swift response**
+**server.swift console**
 
-```JSON
+```console
+POST request to /post from 127.0.0.1
 {
   "path" : "\/post",
   "body" : "{\n  \"foo\": \"bar\"\n}",
+  "method" : "POST",
   "headers" : {
-    "Content-Type" : "application\/json; charset=utf-8",
-    "Host" : "localhost:8080",
-    "Accept" : "*\/*",
     "Content-Length" : "18",
-    "User-Agent" : "curl\/7.54.0"
+    "Host" : "localhost:8000",
+    "User-Agent" : "curl\/7.54.0",
+    "Content-Type" : "application\/json; charset=utf-8",
+    "Accept" : "*\/*"
   },
-  "origin" : "::1"
+  "origin" : "127.0.0.1"
 }
 ```
+
+**server.swift HTTP response**
+
+```HTTP
+HTTP/1.1 200 OK
+content-type: application/json; charset=utf-8
+content-length: 240
+date: Sun, 17 Mar 2019 14:52:24 GMT
+Connection: keep-alive
+
+{"path":"\/post","body":"{\n  \"foo\": \"bar\"\n}","method":"POST","headers":{"Content-Length":"18","Host":"localhost:8000","User-Agent":"curl\/7.54.0","Content-Type":"application\/json; charset=utf-8","Accept":"*\/*"},"origin":"127.0.0.1"}
+```
+
+## Contributing
+
+Send a pull request, create an issue or discuss with me on the Vapor discord.
+
+## Powered By
+
+Powered by [Vapor](https://vapor.codes) and [swift sh](https://github.com/mxcl/swift-sh), please consider backing Vapor at [https://opencollective.com/vapor](https://opencollective.com/vapor) and becoming a patron of Max Howell at [https://www.patreon.com/mxcl](https://www.patreon.com/mxcl).
