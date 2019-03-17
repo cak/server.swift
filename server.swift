@@ -7,6 +7,14 @@ let router = EngineRouter.default()
 var services = Services.default()
 services.register(router, as: Router.self)
 
+var middlewares = MiddlewareConfig()
+let currentDirectory = FileManager.default.currentDirectoryPath
+let filemiddleware = FileMiddleware(publicDirectory: currentDirectory)
+middlewares.use(filemiddleware)
+services.register(middlewares)
+
+services.register(NIOServerConfig.default(hostname: "0.0.0.0", port: 8000))
+
 struct RequestInfo: Content {
     let path: String
     let headers: [String: String]

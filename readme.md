@@ -1,6 +1,6 @@
 # server.swift
 
-A simple server for testing HTTP requests powered by [Vapor](https://vapor.codes) and [swift sh](https://github.com/mxcl/swift-sh).
+A simple server for serving static files and testing HTTP requests powered by [Vapor](https://vapor.codes) and [swift sh](https://github.com/mxcl/swift-sh).
 
 ## Usage
 
@@ -17,16 +17,18 @@ $ swift sh server.swift
 ```
 
 ```console
-Server starting on http://localhost:8080
+Server starting on http://0.0.0.0:8000
 ```
 
+## Serving Static Files
+servers.swift will serve all files in the current working directory. 
 
 ## Examples
 
 **GET request:**
 
 ```console
-curl "http://localhost:8080/get?foo=bar"
+curl "http://localhost:8000/get?foo=bar"
 ```
 
 **server.swift response**
@@ -46,7 +48,7 @@ curl "http://localhost:8080/get?foo=bar"
 **POST request:**
 
 ```console
-curl -X "POST" "http://localhost:8080/post" \
+curl -X "POST" "http://localhost:8000/post" \
      -H 'Content-Type: application/json; charset=utf-8' \
      -d $'{
   "foo": "bar"
