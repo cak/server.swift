@@ -44,7 +44,7 @@ func printRequestInfo(info: RequestInfo) {
     print(requestInfoString)
 }
 
-func request(_ req: Request) throws -> RequestInfo {
+func requestHandler(_ req: Request) throws -> RequestInfo {
     let path = req.http.urlString
     let headers = Dictionary(uniqueKeysWithValues:
         req.http.headers.compactMap { (String($0.name), String($0.value)) })
@@ -58,14 +58,14 @@ func request(_ req: Request) throws -> RequestInfo {
     return request
 }
 
-router.get("/", use: request)
-router.get(PathComponent.catchall, use: request)
-router.post("/", use: request)
-router.post(PathComponent.catchall, use: request)
-router.delete("/", use: request)
-router.delete(PathComponent.catchall, use: request)
-router.put("/", use: request)
-router.put(PathComponent.catchall, use: request)
+router.get(use: requestHandler)
+router.get(PathComponent.catchall, use: requestHandler)
+router.post(use: requestHandler)
+router.post(PathComponent.catchall, use: requestHandler)
+router.delete(use: requestHandler)
+router.delete(PathComponent.catchall, use: requestHandler)
+router.put(use: requestHandler)
+router.put(PathComponent.catchall, use: requestHandler)
 
 let application = try Application(config: Config.default(), environment: Environment.detect(), services: services)
 
