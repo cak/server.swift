@@ -50,12 +50,12 @@ func requestHandler(_ req: Request) throws -> RequestInfo {
         req.http.headers.compactMap { (String($0.name), String($0.value)) })
     let origin = req.http.remotePeer.hostname
     let method = req.http.method.string
-    var request = RequestInfo(path: path, headers: headers, origin: origin, method: method)
+    var requestData = RequestInfo(path: path, headers: headers, origin: origin, method: method)
     if method != "GET" {
-        request.body = req.http.body.description
+        requestData.body = req.http.body.description
     }
-    printRequestInfo(info: request)
-    return request
+    printRequestInfo(info: requestData)
+    return requestData
 }
 
 router.get(use: requestHandler)
