@@ -30,7 +30,8 @@ servers.swift will serve all files in the current working directory.
 ### GET request:
 
 ```console
-curl -I "http://localhost:8000/get?foo=bar"
+curl -i "http://localhost:8000/get?foo=bar" \
+     -H 'origin: https://serversideswift.dev'
 ```
 
 **server.swift console**
@@ -41,9 +42,10 @@ GET request to /get?foo=bar from 127.0.0.1
   "path" : "\/get?foo=bar",
   "method" : "GET",
   "headers" : {
-    "Accept" : "*\/*",
+    "User-Agent" : "curl\/7.54.0",
     "Host" : "localhost:8000",
-    "User-Agent" : "curl\/7.54.0"
+    "origin" : "https:\/\/serversideswift.dev",
+    "Accept" : "*\/*"
   },
   "origin" : "127.0.0.1"
 }
@@ -54,11 +56,15 @@ GET request to /get?foo=bar from 127.0.0.1
 ```HTTP
 HTTP/1.1 200 OK
 content-type: application/json; charset=utf-8
-content-length: 140
-date: Sun, 17 Mar 2019 14:50:40 GMT
+content-length: 181
+access-control-allow-origin: https://serversideswift.dev
+access-control-allow-headers: accept, authorization, content-type, origin, x-requested-with
+access-control-allow-methods: GET, POST, PUT, OPTIONS, DELETE, PATCH
+access-control-max-age: 600
+date: Sat, 23 Mar 2019 09:33:45 GMT
 Connection: keep-alive
 
-{"path":"\/get?foo=bar","method":"GET","headers":{"Accept":"*\/*","Host":"localhost:8000","User-Agent":"curl\/7.54.0"},"origin":"127.0.0.1"}
+{"path":"\/get?foo=bar","method":"GET","headers":{"User-Agent":"curl\/7.54.0","Host":"localhost:8000","origin":"https:\/\/serversideswift.dev","Accept":"*\/*"},"origin":"127.0.0.1"}
 ```
 
 ### POST request:

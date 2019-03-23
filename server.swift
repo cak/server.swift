@@ -11,6 +11,8 @@ var middlewares = MiddlewareConfig()
 let currentDirectory = FileManager.default.currentDirectoryPath
 let filemiddleware = FileMiddleware(publicDirectory: currentDirectory)
 middlewares.use(filemiddleware)
+middlewares.use(CORSMiddleware(configuration: .default()))
+middlewares.use(ErrorMiddleware.self)
 services.register(middlewares)
 
 services.register(NIOServerConfig.default(hostname: "0.0.0.0", port: 8000))
