@@ -42,31 +42,30 @@ curl -i "http://localhost:8000/get?foo=bar" \
      -H 'origin: https://serversideswift.dev'
 ```
 
-**server.swift console**
+**Console**
 
 ```console
-GET request to /get?foo=bar from [IPv4]127.0.0.1/127.0.0.1:51372
+GET request to /get?foo=bar from [IPv6]::1/::1:52978
 {
   "path" : "\/get?foo=bar",
-  "body" : "",
   "method" : "GET",
   "headers" : {
-    "User-Agent" : "curl\/7.54.0",
+    "Accept" : "*\/*",
     "Host" : "localhost:8000",
     "origin" : "https:\/\/serversideswift.dev",
-    "Accept" : "*\/*"
+    "User-Agent" : "curl\/7.54.0"
   },
-  "origin" : "[IPv4]127.0.0.1\/127.0.0.1:51372"
+  "origin" : "[IPv6]::1\/::1:52978"
 }
 ```
 
-**server.swift HTTP response**
+**HTTP Response**
 
 ```HTTP
 HTTP/1.1 200 OK
 Server: server.swift
 content-type: application/json; charset=utf-8
-Content-Length: 271
+Content-Length: 244
 access-control-allow-origin: https://serversideswift.dev
 access-control-allow-headers: accept, authorization, content-type, origin, x-requested-with
 access-control-allow-methods: GET, POST, PUT, OPTIONS, DELETE, PATCH
@@ -74,15 +73,14 @@ access-control-max-age: 600
 
 {
   "path" : "\/get?foo=bar",
-  "body" : "",
   "method" : "GET",
   "headers" : {
-    "User-Agent" : "curl\/7.54.0",
+    "Accept" : "*\/*",
     "Host" : "localhost:8000",
     "origin" : "https:\/\/serversideswift.dev",
-    "Accept" : "*\/*"
+    "User-Agent" : "curl\/7.54.0"
   },
-  "origin" : "[IPv4]127.0.0.1\/127.0.0.1:51372"
+  "origin" : "[IPv6]::1\/::1:52978"
 }
 ```
 
@@ -96,7 +94,7 @@ curl -X "POST" "http://localhost:8000/post" \
 }'
 ```
 
-**server.swift console**
+**Console**
 
 ```console
 POST request to /post from [IPv4]127.0.0.1/127.0.0.1:51299
@@ -115,7 +113,7 @@ POST request to /post from [IPv4]127.0.0.1/127.0.0.1:51299
 }
 ```
 
-**server.swift HTTP response**
+**HTTP Response**
 
 ```HTTP
 HTTP/1.1 200 OK

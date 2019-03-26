@@ -34,8 +34,9 @@ class Server {
 
     final class requestHandler: ChannelInboundHandler {
         typealias InboundIn = HTTPServerRequestPart
-        var requestData: RequestInfo?
         var requestHead: HTTPRequestHead?
+        var contentLength = 0
+        var requestData: RequestInfo?
         var requestBody: String = ""
 
         func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
@@ -52,12 +53,20 @@ class Server {
 
                 requestData = RequestInfo(path: path, headers: headers, origin: origin, method: method)
 
-            case let .body(bodyData):
-                let dataString = bodyData.getString(at: bodyData.readerIndex, length: bodyData.readableBytes)
-                requestBody += dataString ?? ""
-            case .end:
-                requestData?.body = requestBody
+                if let contentLengthHeader = head.headers["content-length"].first {
+                    contentLength = Int(contentLengthHeader) ?? 0
+                }
 
+            case let .body(body):
+                if contentLength != 0 {
+                    let dataString = body.getString(at: body.readerIndex,
+                                                    length: body.readableBytes)
+                    requestBody += dataString ?? ""
+                }
+            case .end:
+                if contentLength != 0 {
+                    requestData?.body = requestBody
+                }
                 let responseBody = printRequestInfo(info: requestData)
                 var headers = HTTPHeaders()
                 headers.add(name: "Server", value: "server.swift")
@@ -65,8 +74,10 @@ class Server {
                 headers.add(name: "Content-Length", value: "\(responseBody.1)")
                 if let originValue = requestHead?.headers["origin"].first {
                     headers.add(name: "access-control-allow-origin", value: originValue)
-                    headers.add(name: "access-control-allow-headers", value: "accept, authorization, content-type, origin, x-requested-with")
-                    headers.add(name: "access-control-allow-methods", value: "GET, POST, PUT, OPTIONS, DELETE, PATCH")
+                    headers.add(name: "access-control-allow-headers",
+                                value: "accept, authorization, content-type, origin, x-requested-with")
+                    headers.add(name: "access-control-allow-methods",
+                                value: "GET, POST, PUT, OPTIONS, DELETE, PATCH")
                     headers.add(name: "access-control-max-age", value: "600")
                 }
 
