@@ -1,6 +1,6 @@
 # server.swift
 
-A simple server for serving static files and testing HTTP requests powered by [Vapor](https://vapor.codes) and [swift sh](https://github.com/mxcl/swift-sh).
+A simple server for testing HTTP requests powered by [SwiftNIO](https://github.com/apple/swift-nio) and [swift sh](https://github.com/mxcl/swift-sh).
 
 ## Usage
 
@@ -17,13 +17,21 @@ swift sh <(curl -L https://github.com/cak/server.swift/raw/master/server.swift)
 ```
 
 ```console
-Server starting on http://0.0.0.0:8000
+Starting server.swift on [IPv4]0.0.0.0/0.0.0.0:8000
 ```
 
 *Alternatively, you can clone the repository and run `‌swift sh server.swift`*
 
-## Serving Static Files
-servers.swift will serve all files in the current working directory. 
+## Command Line Arguments
+The hostname and port can be specified with `--hostname` and `--port`
+
+```console
+swift sh server.swift --hostname "localhost" --port 8080
+```
+
+```console
+Starting server.swift on [IPv6]::1/::1:8080
+```
 
 ## Examples
 
@@ -37,9 +45,10 @@ curl -i "http://localhost:8000/get?foo=bar" \
 **server.swift console**
 
 ```console
-GET request to /get?foo=bar from 127.0.0.1
+GET request to /get?foo=bar from [IPv4]127.0.0.1/127.0.0.1:51372
 {
   "path" : "\/get?foo=bar",
+  "body" : "",
   "method" : "GET",
   "headers" : {
     "User-Agent" : "curl\/7.54.0",
@@ -47,7 +56,7 @@ GET request to /get?foo=bar from 127.0.0.1
     "origin" : "https:\/\/serversideswift.dev",
     "Accept" : "*\/*"
   },
-  "origin" : "127.0.0.1"
+  "origin" : "[IPv4]127.0.0.1\/127.0.0.1:51372"
 }
 ```
 
@@ -55,22 +64,32 @@ GET request to /get?foo=bar from 127.0.0.1
 
 ```HTTP
 HTTP/1.1 200 OK
+Server: server.swift
 content-type: application/json; charset=utf-8
-content-length: 181
+Content-Length: 271
 access-control-allow-origin: https://serversideswift.dev
 access-control-allow-headers: accept, authorization, content-type, origin, x-requested-with
 access-control-allow-methods: GET, POST, PUT, OPTIONS, DELETE, PATCH
 access-control-max-age: 600
-date: Sat, 23 Mar 2019 09:33:45 GMT
-Connection: keep-alive
 
-{"path":"\/get?foo=bar","method":"GET","headers":{"User-Agent":"curl\/7.54.0","Host":"localhost:8000","origin":"https:\/\/serversideswift.dev","Accept":"*\/*"},"origin":"127.0.0.1"}
+{
+  "path" : "\/get?foo=bar",
+  "body" : "",
+  "method" : "GET",
+  "headers" : {
+    "User-Agent" : "curl\/7.54.0",
+    "Host" : "localhost:8000",
+    "origin" : "https:\/\/serversideswift.dev",
+    "Accept" : "*\/*"
+  },
+  "origin" : "[IPv4]127.0.0.1\/127.0.0.1:51372"
+}
 ```
 
 ### POST request:
 
 ```console
-curl -I -X "POST" "http://localhost:8000/post" \
+curl -X "POST" "http://localhost:8000/post" \
      -H 'Content-Type: application/json; charset=utf-8' \
      -d $'{
   "foo": "bar"
@@ -80,19 +99,19 @@ curl -I -X "POST" "http://localhost:8000/post" \
 **server.swift console**
 
 ```console
-POST request to /post from 127.0.0.1
+POST request to /post from [IPv4]127.0.0.1/127.0.0.1:51299
 {
   "path" : "\/post",
   "body" : "{\n  \"foo\": \"bar\"\n}",
   "method" : "POST",
   "headers" : {
-    "Content-Length" : "18",
-    "Host" : "localhost:8000",
-    "User-Agent" : "curl\/7.54.0",
     "Content-Type" : "application\/json; charset=utf-8",
-    "Accept" : "*\/*"
+    "Host" : "localhost:8000",
+    "Accept" : "*\/*",
+    "Content-Length" : "18",
+    "User-Agent" : "curl\/7.54.0"
   },
-  "origin" : "127.0.0.1"
+  "origin" : "[IPv4]127.0.0.1\/127.0.0.1:51299"
 }
 ```
 
@@ -100,18 +119,25 @@ POST request to /post from 127.0.0.1
 
 ```HTTP
 HTTP/1.1 200 OK
+Server: server.swift
 content-type: application/json; charset=utf-8
-content-length: 240
-date: Sun, 17 Mar 2019 14:52:24 GMT
-Connection: keep-alive
+Content-Length: 365
 
-{"path":"\/post","body":"{\n  \"foo\": \"bar\"\n}","method":"POST","headers":{"Content-Length":"18","Host":"localhost:8000","User-Agent":"curl\/7.54.0","Content-Type":"application\/json; charset=utf-8","Accept":"*\/*"},"origin":"127.0.0.1"}
+{
+  "path" : "\/post",
+  "body" : "{\"foo\":\"bar\"}",
+  "method" : "POST",
+  "headers" : {
+    "Content-Type" : "application\/json; charset=utf-8",
+    "Host" : "localhost:8000",
+    "Connection" : "close",
+    "Content-Length" : "13",
+    "User-Agent" : "Paw\/3.1.8 (Macintosh; OS X\/10.14.3) GCDHTTPRequest"
+  },
+  "origin" : "[IPv4]127.0.0.1\/127.0.0.1:51266"
+}
 ```
 
 ## Contributing
 
-Send a pull request, create an issue or discuss with me (@cak) on the Vapor [Discord](http://vapor.team) server.
-
-## Powered By
-
-Powered by [Vapor](https://vapor.codes) and [swift sh](https://github.com/mxcl/swift-sh), please consider backing Vapor at [https://opencollective.com/vapor](https://opencollective.com/vapor) and becoming a patron of Max Howell at [https://www.patreon.com/mxcl](https://www.patreon.com/mxcl).
+Send a pull request or create an issue.
