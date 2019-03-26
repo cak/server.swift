@@ -5,8 +5,6 @@ import NIOHTTP1 // apple/swift-nio -> 1.0.0
 import NIO
 
 class Server {
-    let loopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-
     func run(host: String, port: Int) {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
 
