@@ -2,6 +2,8 @@
 
 A simple server for testing HTTP requests powered by [SwiftNIO](https://github.com/apple/swift-nio) and [swift sh](https://github.com/mxcl/swift-sh).
 
+> server.swift supports only SwiftNIO 2 and Swift 5.0
+
 ## Usage
 
 #### Install swift sh
@@ -87,7 +89,7 @@ access-control-max-age: 600
 ### POST request:
 
 ```console
-curl -X "POST" "http://localhost:8000/post" \
+curl -i -X "POST" "http://localhost:8000/post" \
      -H 'Content-Type: application/json; charset=utf-8' \
      -d $'{
   "foo": "bar"
@@ -119,20 +121,20 @@ POST request to /post from [IPv4]127.0.0.1/127.0.0.1:51299
 HTTP/1.1 200 OK
 Server: server.swift
 content-type: application/json; charset=utf-8
-Content-Length: 365
+Content-Length: 327
 
 {
   "path" : "\/post",
-  "body" : "{\"foo\":\"bar\"}",
+  "body" : "{\n  \"foo\": \"bar\"\n}",
   "method" : "POST",
   "headers" : {
-    "Content-Type" : "application\/json; charset=utf-8",
+    "Accept" : "*\/*",
     "Host" : "localhost:8000",
-    "Connection" : "close",
-    "Content-Length" : "13",
-    "User-Agent" : "Paw\/3.1.8 (Macintosh; OS X\/10.14.3) GCDHTTPRequest"
+    "Content-Length" : "18",
+    "Content-Type" : "application\/json; charset=utf-8",
+    "User-Agent" : "curl\/7.54.0"
   },
-  "origin" : "[IPv4]127.0.0.1\/127.0.0.1:51266"
+  "origin" : "[IPv4]127.0.0.1\/127.0.0.1:49362"
 }
 ```
 

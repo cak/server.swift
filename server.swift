@@ -1,8 +1,8 @@
 #!/usr/bin/swift sh
 
 import Foundation
-import NIOHTTP1 // apple/swift-nio -> 1.0.0
 import NIO
+import NIOHTTP1 // apple/swift-nio -> 2.0.0
 
 class Server {
     func run(host: String, port: Int) {
@@ -13,8 +13,8 @@ class Server {
             .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
 
             .childChannelInitializer { channel in
-                channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true).then {
-                    channel.pipeline.add(handler: requestHandler())
+                channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true).flatMap {
+                    channel.pipeline.addHandler(RequestHandler())
                 }
             }
 
@@ -30,14 +30,13 @@ class Server {
         }
     }
 
-    final class requestHandler: ChannelInboundHandler {
+    final class RequestHandler: ChannelInboundHandler {
         typealias InboundIn = HTTPServerRequestPart
         var requestHead: HTTPRequestHead?
-        var contentLength = 0
         var requestData: RequestInfo?
-        var requestBody: String = ""
+        var requestBody: String?
 
-        func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
+        func channelRead(context: ChannelHandlerContext, data: NIOAny) {
             let req = unwrapInboundIn(data)
 
             switch req {
@@ -46,24 +45,20 @@ class Server {
                 let headers = Dictionary(uniqueKeysWithValues:
                     head.headers.compactMap { (String($0.name), String($0.value)) })
                 let path = head.uri
-                let origin = ctx.remoteAddress?.description
+                let origin = context.remoteAddress?.description
                 let method = "\(head.method)"
 
                 requestData = RequestInfo(path: path, headers: headers, origin: origin, method: method)
 
-                if let contentLengthHeader = head.headers["content-length"].first {
-                    contentLength = Int(contentLengthHeader) ?? 0
-                }
-
             case let .body(body):
-                if contentLength != 0 {
-                    let dataString = body.getString(at: body.readerIndex,
-                                                    length: body.readableBytes)
-                    requestBody += dataString ?? ""
+                let dataString = body.getString(at: body.readerIndex,
+                                                length: body.readableBytes)
+                if let requestDataString = dataString {
+                    requestBody = (requestBody ?? "") + requestDataString as String
                 }
             case .end:
-                if contentLength != 0 {
-                    requestData?.body = requestBody
+                if let requestBodyData = requestBody {
+                    requestData?.body = requestBodyData
                 }
                 let responseBody = printRequestInfo(info: requestData)
                 var headers = HTTPHeaders()
@@ -78,19 +73,26 @@ class Server {
                                 value: "GET, POST, PUT, OPTIONS, DELETE, PATCH")
                     headers.add(name: "access-control-max-age", value: "600")
                 }
-
                 let head = HTTPResponseHead(version: requestHead!.version,
                                             status: .ok, headers: headers)
-                let part = HTTPServerResponsePart.head(head)
-                _ = ctx.channel.write(part)
-
-                var buffer = ctx.channel.allocator.buffer(capacity: responseBody.1)
-                buffer.write(string: responseBody.0)
+                let headpart = HTTPServerResponsePart.head(head)
+                context.channel.write(headpart)
+                var buffer = context.channel.allocator.buffer(capacity: responseBody.1)
+                buffer.writeString(responseBody.0)
                 let bodypart = HTTPServerResponsePart.body(.byteBuffer(buffer))
-                _ = ctx.channel.write(bodypart)
-                _ = ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
-                    ctx.channel.close()
-                }
+                context.channel.write(bodypart, promise: nil)
+                context.flush()
+                context.channel.close(promise: nil)
+            }
+
+            func channelReadComplete(context: ChannelHandlerContext) {
+                context.flush()
+                context.channel.close(promise: nil)
+            }
+
+            func errorCaught(context: ChannelHandlerContext, error: Error) {
+                print("Server Error: \(error.localizedDescription)")
+                context.close(promise: nil)
             }
         }
     }
@@ -135,13 +137,13 @@ var hostname = "0.0.0.0"
 var port = 8000
 
 let args = CommandLine.arguments
-for i in 0 ..< args.count {
-    let argument = args[i]
+for index in 0 ..< args.count {
+    let argument = args[index]
     switch argument {
     case "--hostname":
-        hostname = (i + 1 < args.count) ? args[i + 1] : "0.0.0.0"
+        hostname = (index + 1 < args.count) ? args[index + 1] : "0.0.0.0"
     case "--port":
-        port = (i + 1 < args.count) ? Int(args[i + 1]) ?? 8000 : 8000
+        port = (index + 1 < args.count) ? Int(args[index + 1]) ?? 8000 : 8000
     default:
         break
     }
