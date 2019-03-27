@@ -47,9 +47,7 @@ class Server {
                 let path = head.uri
                 let origin = context.remoteAddress?.description
                 let method = "\(head.method)"
-
                 requestData = RequestInfo(path: path, headers: headers, origin: origin, method: method)
-
             case let .body(body):
                 let dataString = body.getString(at: body.readerIndex,
                                                 length: body.readableBytes)
@@ -62,17 +60,7 @@ class Server {
                 }
                 let responseBody = printRequestInfo(info: requestData)
                 var headers = HTTPHeaders()
-                headers.add(name: "Server", value: "server.swift")
-                headers.add(name: "content-type", value: "application/json; charset=utf-8")
-                headers.add(name: "Content-Length", value: "\(responseBody.1)")
-                if let originValue = requestHead?.headers["origin"].first {
-                    headers.add(name: "access-control-allow-origin", value: originValue)
-                    headers.add(name: "access-control-allow-headers",
-                                value: "accept, authorization, content-type, origin, x-requested-with")
-                    headers.add(name: "access-control-allow-methods",
-                                value: "GET, POST, PUT, OPTIONS, DELETE, PATCH")
-                    headers.add(name: "access-control-max-age", value: "600")
-                }
+                addHeaders(headers: &headers, reqHeaders: requestHead?.headers, responseLength: responseBody.1)
                 let head = HTTPResponseHead(version: requestHead!.version,
                                             status: .ok, headers: headers)
                 let headpart = HTTPServerResponsePart.head(head)
@@ -95,6 +83,22 @@ class Server {
                 context.close(promise: nil)
             }
         }
+    }
+}
+
+func addHeaders(headers: inout HTTPHeaders,
+                reqHeaders: HTTPHeaders?,
+                responseLength: Int) {
+    headers.add(name: "Server", value: "server.swift")
+    headers.add(name: "content-type", value: "application/json; charset=utf-8")
+    headers.add(name: "Content-Length", value: "\(responseLength)")
+    if let origin = reqHeaders?["origin"].first {
+        headers.add(name: "access-control-allow-origin", value: origin)
+        headers.add(name: "access-control-allow-headers",
+                    value: "accept, authorization, content-type, origin, x-requested-with")
+        headers.add(name: "access-control-allow-methods",
+                    value: "GET, POST, PUT, OPTIONS, DELETE, PATCH")
+        headers.add(name: "access-control-max-age", value: "600")
     }
 }
 
