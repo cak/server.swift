@@ -34,7 +34,7 @@ class Server {
         typealias InboundIn = HTTPServerRequestPart
         var requestHead: HTTPRequestHead?
         var requestData: RequestInfo?
-        var requestBody: String?
+        var requestBodyBuffer: ByteBuffer?
 
         func channelRead(context: ChannelHandlerContext, data: NIOAny) {
             let req = unwrapInboundIn(data)
@@ -48,16 +48,14 @@ class Server {
                 let origin = context.remoteAddress?.description
                 let method = "\(head.method)"
                 requestData = RequestInfo(path: path, headers: headers, origin: origin, method: method)
-            case let .body(body):
-                let dataString = body.getString(at: body.readerIndex,
-                                                length: body.readableBytes)
-                if let requestDataString = dataString {
-                    requestBody = (requestBody ?? "") + requestDataString as String
-                }
+                requestBodyBuffer = context.channel.allocator.buffer(capacity: 0)
+            case var .body(buffer: bodyBuffer):
+                requestBodyBuffer?.writeBuffer(&bodyBuffer)
             case .end:
-                if let requestBodyData = requestBody {
-                    requestData?.body = requestBodyData
+                if let bufferString = bufferToString(requestBodyBuffer) {
+                    requestData?.body = bufferString
                 }
+
                 let responseBody = printRequestInfo(info: requestData)
                 var headers = HTTPHeaders()
                 addHeaders(headers: &headers, reqHeaders: requestHead?.headers, responseLength: responseBody.1)
@@ -70,12 +68,10 @@ class Server {
                 let bodypart = HTTPServerResponsePart.body(.byteBuffer(buffer))
                 context.channel.write(bodypart, promise: nil)
                 context.flush()
-                context.channel.close(promise: nil)
             }
 
             func channelReadComplete(context: ChannelHandlerContext) {
                 context.flush()
-                context.channel.close(promise: nil)
             }
 
             func errorCaught(context: ChannelHandlerContext, error: Error) {
@@ -84,6 +80,16 @@ class Server {
             }
         }
     }
+}
+
+func bufferToString(_ buffer: ByteBuffer?) -> String? {
+    guard let buf = buffer else { return nil }
+    guard let bufferString = buf.getString(at: buf.readerIndex,
+                                           length: buf.readableBytes) else { return nil }
+    if bufferString.count > 0 {
+        return bufferString
+    }
+    return nil
 }
 
 func addHeaders(headers: inout HTTPHeaders,
@@ -112,7 +118,7 @@ func printRequestInfo(info: RequestInfo?) -> (String, Int) {
     guard let requestInfoString = String(data: requestInfoData, encoding: .utf8) else {
         return (string: "Empty", data: 0)
     }
-    print("\n\(info.method) request to \(info.path) from \(info.origin ?? "unknown")")
+    print("\n\(info.method) request to \(info.path) from \(info.origin ?? "UNKNOWN")")
     print(requestInfoString)
     return (requestInfoString, requestInfoData.count)
 }
