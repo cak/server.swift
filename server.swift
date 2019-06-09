@@ -7,7 +7,9 @@ import NIOHTTP1 // apple/swift-nio -> 2.0.0
 class Server {
     func run(host: String, port: Int) {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-
+        defer {
+            try! group.syncShutdownGracefully()
+        }
         let bootstrap = ServerBootstrap(group: group)
             .serverChannelOption(ChannelOptions.backlog, value: 256)
             .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
@@ -17,6 +19,11 @@ class Server {
                     channel.pipeline.addHandler(RequestHandler())
                 }
             }
+            // Enable TCP_NODELAY and SO_REUSEADDR for the accepted Channels
+            .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
+            .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
+            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
+            .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
 
         do {
             let channel =
@@ -67,6 +74,7 @@ class Server {
                 buffer.writeString(responseBody.0)
                 let bodypart = HTTPServerResponsePart.body(.byteBuffer(buffer))
                 context.channel.write(bodypart, promise: nil)
+                context.channel.write(HTTPServerResponsePart.end(nil), promise: nil)
                 context.flush()
             }
 
@@ -118,8 +126,7 @@ func printRequestInfo(info: RequestInfo?) -> (String, Int) {
     guard let requestInfoString = String(data: requestInfoData, encoding: .utf8) else {
         return (string: "Empty", data: 0)
     }
-    print("\n\(info.method) request to \(info.path) from \(info.origin ?? "UNKNOWN")")
-    print(requestInfoString)
+    print("\n\(info.method) request to \(info.path) from \(info.origin ?? "UNKNOWN")\n\(requestInfoString)")
     return (requestInfoString, requestInfoData.count)
 }
 
